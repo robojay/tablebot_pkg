@@ -1,0 +1,7 @@
+<launch>
+
+<!-- Starting tablebot node -->
+
+   <node name="tablebot" pkg="tablebot_pkg" type="tablebot_pkg_node" output="screen" />
+
+</launch>

@@ -87,7 +87,7 @@ void depthImageCallBack(const sensor_msgs::ImageConstPtr& image) {
 	unsigned long int avg = 0;
 	int samples = 0;
 
-	for (int y = 230; y < 240; y++) {
+	for (int y = 239; y < 240; y++) {
 		for (int x = 0; x < 320; x++) {
 			unsigned int index = y * (image->step) + 2*x;
 			unsigned int point = (image->data[index]) |
@@ -111,14 +111,14 @@ void depthImageCallBack(const sensor_msgs::ImageConstPtr& image) {
 
 	geometry_msgs::Twist robotCommand;
 
-	if (avg > 50) {
+	if (avg > 100) {
 		foundEdge = true;
 	}
 	else {
 		foundEdge = false;
 	}
 
-	// ROS_INFO("[DepthImage CallBack] avg = %ld", avg);
+	ROS_INFO("[DepthImage CallBack] avg = %ld", avg);
 
 	// ROS_INFO("[DepthImage CallBack] max = %d  min = %d", max, min);
 
@@ -173,7 +173,7 @@ int main (int argc, char** argv) {
 	linearSpeed.data = 0.1;
 	angularSpeed.data = 0.5;
 
-	ros::Duration(2.0).sleep();
+	ros::Duration(10.0).sleep();
 
 	robotRelativeLinearSpeedPub.publish(linearSpeed);
 	robotRelativeAngularSpeedPub.publish(angularSpeed);
