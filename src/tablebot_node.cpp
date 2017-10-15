@@ -18,6 +18,9 @@ ros::Publisher robotRelativeLinearSpeedPub;
 bool foundEdge = false;
 double robotYaw = 0.0;
 bool robotIdle = true;
+double lineRho = 0.0;
+double lineTheta = 0.0;
+bool foundLine = false;
 
 enum RobotState {Forward, Stop, SpinStart, SpinWait};
 
@@ -64,6 +67,12 @@ void motorStateCallBack(const tablebot_pkg::MotorState::ConstPtr motorState) {
 	else {
 		robotIdle = false;
 	}
+}
+
+void lineDetectCallBack(const geometry_msgs::Pose2D::ConstPtr lineDetect) {
+	foundLine = true;
+	lineRho = lineDetect->x;
+	lineTheta = lineDetect->theta;
 }
 
 
@@ -150,7 +159,7 @@ int main (int argc, char** argv) {
 	// ros::Subscriber pointCloudSub = nh.subscribe ("/camera/depth/points", 1, pointCloudCallBack);
 
 	// Subscribe to Depth Image
-	ros::Subscriber depthImageSub = nh.subscribe("/camera/depth/image_raw", 1, depthImageCallBack);
+	//ros::Subscriber depthImageSub = nh.subscribe("/camera/depth/image_raw", 1, depthImageCallBack);
 
 	// Subscribe to Odometry
 	// ros::Subscriber odometrySub = nh.subscribe("/odom", 1, odometryCallBack);
@@ -160,6 +169,9 @@ int main (int argc, char** argv) {
 
 	// Create a ROS publisher for robot Twist commands
 	robotCommandPub = nh.advertise<geometry_msgs::Twist> ("/cmd_vel_mux/input/teleop", 1);
+
+	// Subscribe to Line Detect messages
+	ros::Subscriber lineDetectSub = nh.subscribe("/lineDetect", 1, lineDetectCallBack);
 
 	// Create a ROS publishers for robot relative motion commands
 	robotRelativeCommandPub = nh.advertise<geometry_msgs::Pose2D> ("/cmd_relative_move", 1);
@@ -203,6 +215,25 @@ int main (int argc, char** argv) {
 		robotCommand.angular.y = 0;
 		robotCommand.angular.z = 0;		
 
+
+		if (foundLine) {
+			if (lineTheta > 1.02*M_PI/2) {
+				robotCommand.angular.z = -0.5;
+			}
+			else if (lineTheta < 0.98*M_PI/2) {
+				robotCommand.angular.z = 0.5;
+			}
+			else {
+				robotCommand.angular.z = 0;		
+			}
+			foundLine = false;
+			robotCommandPub.publish(robotCommand);
+		}
+
+		#if 0
+		//
+		// simple state machine version
+		//
 		switch(robotState) {
 			case Forward:
 				if (foundEdge) {
@@ -243,6 +274,7 @@ int main (int argc, char** argv) {
 				robotState = Forward;
 				break;
 		}
+		#endif
 
 		r.sleep();
 
