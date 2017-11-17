@@ -226,21 +226,25 @@ int main (int argc, char** argv) {
 			else {
 				robotCommand.angular.z = 0;		
 			}
-			foundLine = false;
-			robotCommandPub.publish(robotCommand);
+			//foundLine = false;
+			//robotCommandPub.publish(robotCommand);
+		}
+		else {
+			robotCommand.angular.z = 0;		
 		}
 
-		#if 0
 		//
 		// simple state machine version
 		//
 		switch(robotState) {
 			case Forward:
-				if (foundEdge) {
-					robotState = Stop;
-				}
-				else {
-					robotCommand.linear.x = 0.1;
+				robotCommand.linear.x = 0.1;
+				if (foundLine) {
+					if (lineRho > 200) {
+						robotCommand.linear.x = 0.0;
+						robotState = Stop;
+					}
+					foundLine = false;
 				}
 				robotCommandPub.publish(robotCommand);
 				break;
@@ -274,7 +278,6 @@ int main (int argc, char** argv) {
 				robotState = Forward;
 				break;
 		}
-		#endif
 
 		r.sleep();
 
